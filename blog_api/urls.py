@@ -23,7 +23,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.routers import DefaultRouter
 
 from account.views import UserViewSet
-from main.views import PostsViewSet, CommentViewSet, LikeViewSet, FavoriteViewSet, RatingViewSet
+from main.views import *
 
 router = DefaultRouter()
 router.register('users', UserViewSet)
@@ -47,6 +47,7 @@ urlpatterns = [
     path('api/v1/docs/', schema_view.with_ui()),
     path('admin/', admin.site.urls),
     path('api/v1/accounts/', include('account.urls')),
+    path('v1/api/news/', ParsAPIView.as_view()),
     path('api/v1/', include(router.urls)),
 ]
 

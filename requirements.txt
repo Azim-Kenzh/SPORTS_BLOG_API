@@ -7,3 +7,8 @@ django-phonenumber-field==5.0.0
 phonenumbers==8.12.19
 djangorestframework-simplejwt
 drf-yasg
+celery
+redis
+beautifulsoup4==4.9.3
+lxml==4.6.2
+requests==2.25.1

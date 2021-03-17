@@ -9,8 +9,10 @@ from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from main.models import *
+from main.parsing import main
 from main.permissions import IsPostAuthor
 from main.serializers import *
 
@@ -124,3 +126,11 @@ class RatingViewSet(viewsets.ModelViewSet):
 
     def get_serializer_context(self):
         return {'request': self.request, 'action': self.action}
+
+
+class ParsAPIView(APIView):
+
+    def get(self, request):
+        dict_ = main()
+        serializer = ParsSerializer(instance=dict_, many=True)
+        return Response(serializer.data)
