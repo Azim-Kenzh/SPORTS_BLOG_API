@@ -22,9 +22,11 @@ from drf_yasg.views import get_schema_view
 from rest_framework.permissions import AllowAny
 from rest_framework.routers import DefaultRouter
 
-from main.views import *
+from account.views import UserViewSet
+from main.views import PostsViewSet, CommentViewSet, LikeViewSet, FavoriteViewSet, RatingViewSet
 
 router = DefaultRouter()
+router.register('users', UserViewSet)
 router.register('posts', PostsViewSet)
 router.register('comment', CommentViewSet)
 router.register('likes', LikeViewSet)
@@ -47,4 +49,9 @@ urlpatterns = [
     path('api/v1/accounts/', include('account.urls')),
     path('api/v1/', include(router.urls)),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
 

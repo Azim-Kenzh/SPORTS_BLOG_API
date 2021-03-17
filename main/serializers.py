@@ -1,3 +1,4 @@
+from django.db.models import Avg
 from rest_framework import serializers
 
 from main.models import *
@@ -19,15 +20,23 @@ class PostSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation['author'] = instance.author.email
-        representation['images'] = PostImageSerializer(instance.images.all(),
-                                                       many=True, context=self.context).data
+        representation['ratings'] = instance.ratings.all().aggregate(Avg('rating')).get('rating__avg')
+        representation['likes'] = instance.likes.filter(like=True).count()
+        representation['images'] = PostImageSerializer(instance.images.all(), many=True, context=self.context).data
+        representation['comment'] = CommentSerializer(instance.comments.all(), many=True, context=self.context).data
         return representation
+
+
 
     def create(self, validated_data):
         request = self.context.get('request')
         user_id = request.user.id
         validated_data['author_id'] = user_id
+        image_data = request.FILES
         post = Post.objects.create(**validated_data)
+        for image in image_data.getlist('images'):
+            PostImage.objects.create(image=image, post=post)
+            print(image)
         return post
 
 
@@ -70,6 +79,7 @@ class CommentSerializer(serializers.ModelSerializer):
         comment = Comment.objects.create(**validated_data)
         return comment
 
+
 class LikeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Like
@@ -86,9 +96,9 @@ class LikeSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         request = self.context.get('request')
         user = request.user
-        movie = validated_data.get('movie')
-        like = Like.objects.get_or_create(user=user, movie=movie)[0]
-        like.like = True if like.like == False else False
+        post = validated_data.get('post')
+        like = Like.objects.get_or_create(author=user, post=post)[0]
+        like.like = True if like.like is False else False
         like.save()
         return like
 
@@ -96,7 +106,7 @@ class LikeSerializer(serializers.ModelSerializer):
 class FavoriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Favorite
-        fields = ('id', 'movie', 'author', 'favorite')
+        fields = ('id', 'post', 'author', 'favorite')
 
     def get_fields(self):
         action = self.context.get('action')
@@ -109,8 +119,8 @@ class FavoriteSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         request = self.context.get('request')
         user = request.user
-        movie = validated_data.get('movie')
-        favorite = Favorite.objects.get_or_create(user=user, movie=movie)[0]
+        post = validated_data.get('post')
+        favorite = Favorite.objects.get_or_create(author=user, post=post)[0]
         favorite.favorite = True if favorite.favorite == False else False
         favorite.save()
         return favorite
@@ -137,9 +147,9 @@ class RatingSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         request = self.context.get('request')
         user = request.user
-        movie = validated_data.get('post')
+        post = validated_data.get('post')
         rat = validated_data.get('rating')
-        rating = Rating.objects.get_or_create(user=user, movie=movie)[0]
+        rating = Rating.objects.get_or_create(author=user, post=post)[0]
         rating.rating = rat
         rating.save()
         return rating

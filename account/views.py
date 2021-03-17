@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.shortcuts import render, get_object_or_404
 
-from rest_framework import status
+from rest_framework import status, mixins, viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.permissions import IsAuthenticated
@@ -41,3 +41,21 @@ class LogoutView(APIView):
         user = request.user
         Token.objects.filter(user=user).delete()
         return Response('Successfully logged out', status=status.HTTP_200_OK)
+
+
+class UserViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
+    queryset = MyUser.objects.all()
+    serializer_class = UserSerializer
+    lookup_field = 'email'
+    lookup_url_kwarg = 'email'
+    lookup_value_regex = '[\w@.]+'
+
+    def get_permissions(self):
+        if self.action in ['retrieve', 'partial_update', 'destroy', 'update']:
+            permissions = [IsAuthenticated, ]
+        else:
+            permissions = [IsAuthenticated]
+        return [permission() for permission in permissions]
+
+    def get_serializer_context(self):
+        return {'request': self.request, 'action': self.action}

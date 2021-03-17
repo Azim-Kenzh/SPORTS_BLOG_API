@@ -32,18 +32,20 @@ class PostsViewSet(viewsets.ModelViewSet):
         return {'request': self.request}
 
     def get_permissions(self):
-        if self.action in ['update', 'partial_update', 'destroy']:
+        if self.action == 'create':
+            permissions = [IsAuthenticated, ]
+        elif self.action in ['update', 'partial_update', 'delete']:
             permissions = [IsPostAuthor, ]
         else:
-            permissions = [IsAuthenticated, ]
-        return [permission() for permission in permissions]
+            permissions = []
+        return [perm() for perm in permissions]
 
     """Фильтрация по неделям"""
     def get_queryset(self):
         queryset = super().get_queryset()
-        weeks_count = int(self.request.query_params.get('week', 0))
-        if weeks_count > 0:
-            start_date = timezone.now() - timedelta(weeks=weeks_count)
+        days_count = int(self.request.query_params.get('days', 0))
+        if days_count > 0:
+            start_date = timezone.now() - timedelta(days=days_count)
             queryset = queryset.filter(created_at__gte=start_date)
         return queryset
 
@@ -114,7 +116,7 @@ class FavoriteViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, viewsets.G
         return {'request': self.request, 'action': self.action}
 
 
-class RatingViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
+class RatingViewSet(viewsets.ModelViewSet):
     queryset = Rating.objects.all()
     serializer_class = RatingSerializer
     permission_classes = [IsAuthenticated, ]

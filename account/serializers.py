@@ -3,6 +3,7 @@ from rest_framework import serializers
 
 from account.models import MyUser
 from account.utils import send_activation_code
+from main.serializers import FavoriteSerializer
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -52,3 +53,17 @@ class LoginSerializer(serializers.Serializer):
 
         validate_data['user'] = user
         return validate_data
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MyUser
+        fields = ('email', )
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        action = self.context.get('action')
+        if action == 'retrieve':
+            representation['favorites'] = FavoriteSerializer(instance.favorites.filter(favorite=True),
+                                                             many=True, context=self.context).data
+        return representation
