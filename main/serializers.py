@@ -22,6 +22,7 @@ class PostSerializer(serializers.ModelSerializer):
         representation['author'] = instance.author.email
         representation['ratings'] = instance.ratings.all().aggregate(Avg('rating')).get('rating__avg')
         representation['likes'] = instance.likes.filter(like=True).count()
+        representation['favorites'] = instance.favorites.filter(favorite=True).count()
         representation['images'] = PostImageSerializer(instance.images.all(), many=True, context=self.context).data
         representation['comment'] = CommentSerializer(instance.comments.all(), many=True, context=self.context).data
         return representation
@@ -62,6 +63,7 @@ class PostImageSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
+    created_at = serializers.DateTimeField(format='%d %B %Y - %H:%M', read_only=True)
 
     class Meta:
         model = Comment
@@ -93,6 +95,11 @@ class LikeSerializer(serializers.ModelSerializer):
             fields.pop('like')
         return fields
 
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['author'] = instance.author.email
+        return representation
+
     def create(self, validated_data):
         request = self.context.get('request')
         user = request.user
@@ -106,7 +113,7 @@ class LikeSerializer(serializers.ModelSerializer):
 class FavoriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Favorite
-        fields = ('id', 'post', 'author', 'favorite')
+        fields = ('post', 'author', 'favorite')
 
     def get_fields(self):
         action = self.context.get('action')
@@ -115,6 +122,11 @@ class FavoriteSerializer(serializers.ModelSerializer):
             fields.pop('author')
             fields.pop('favorite')
         return fields
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['author'] = instance.author.email
+        return representation
 
     def create(self, validated_data):
         request = self.context.get('request')
@@ -130,6 +142,11 @@ class RatingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Rating
         fields = ('post', 'author', 'rating')
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['author'] = instance.author.email
+        return representation
 
     def validate(self, attrs):
         rating = attrs.get('rating')

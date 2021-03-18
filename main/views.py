@@ -19,30 +19,34 @@ from main.serializers import *
 
 MyUser = get_user_model()
 
+class PermissionMixin:
+    def get_permissions(self):
+        if self.action == 'create':
+            permissions = [IsAuthenticated, ]
+        elif self.action in ['update', 'partial_update', 'delete']:
+            permissions = [IsPostAuthor, ]
+        elif self.action == 'get':
+            permissions = [AllowAny, ]
+        else:
+            permissions = []
+        return [perm() for perm in permissions]
+
+    def get_serializer_context(self):
+        return {'request': self.request, 'action': self.action}
+
 class CategoryListView(generics.ListAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [AllowAny, ]
 
 
-class PostsViewSet(viewsets.ModelViewSet):
+class PostsViewSet(PermissionMixin, viewsets.ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
-    permission_classes = [IsAuthenticated, ]
+    permission_classes = [AllowAny, ]
 
-    def get_serializer_context(self):
-        return {'request': self.request}
 
-    def get_permissions(self):
-        if self.action == 'create':
-            permissions = [IsAuthenticated, ]
-        elif self.action in ['update', 'partial_update', 'delete']:
-            permissions = [IsPostAuthor, ]
-        else:
-            permissions = []
-        return [perm() for perm in permissions]
-
-    """Фильтрация по неделям"""
+    """Фильтрация по дням"""
     def get_queryset(self):
         queryset = super().get_queryset()
         days_count = int(self.request.query_params.get('days', 0))
@@ -83,21 +87,9 @@ class PostImageView(generics.ListCreateAPIView):
         return {'request': self.request}
 
 
-class CommentViewSet(viewsets.ModelViewSet):
+class CommentViewSet(PermissionMixin, viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-
-    def get_permissions(self):
-        if self.action == 'create':
-            permissions = [IsAuthenticated, ]
-        elif self.action in ['update', 'partial_update', 'delete']:
-            permissions = [IsPostAuthor, ]
-        else:
-            permissions = []
-        return [perm() for perm in permissions]
-
-    def get_serializer_context(self):
-        return {'request': self.request, 'action': self.action}
 
 
 class LikeViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):

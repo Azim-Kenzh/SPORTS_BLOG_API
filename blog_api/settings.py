@@ -150,7 +150,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 100
+    'PAGE_SIZE': 3
 }
 
-CELERY_BROKER_URL = 'redis://localhost:6380'
+CELERY_BROKER_URL = 'redis://localhost:6378'

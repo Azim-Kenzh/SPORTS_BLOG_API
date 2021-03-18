@@ -22,12 +22,11 @@ class RegisterView(APIView):
 
 class ActivateView(APIView):
     def get(self, request, activation_code):
-        User = get_user_model()
-        user = get_object_or_404(User, activation_code=activation_code)
+        user = get_object_or_404(MyUser, activation_code=activation_code)
         user.is_active = True
         user.activation_code = ''
         user.save()
-        return Response('Ваш аккаунт успешно активирован', status=status.HTTP_200_OK)
+        return Response("Your account successfully activated!", status=status.HTTP_200_OK)
 
 
 class LoginView(ObtainAuthToken):

@@ -47,8 +47,9 @@ urlpatterns = [
     path('api/v1/docs/', schema_view.with_ui()),
     path('admin/', admin.site.urls),
     path('api/v1/accounts/', include('account.urls')),
-    path('v1/api/news/', ParsAPIView.as_view()),
+    path('api/v1/news/', ParsAPIView.as_view()),
     path('api/v1/', include(router.urls)),
+    path('api/v1/categories/', CategoryListView.as_view()),
 ]
 
 if settings.DEBUG:
